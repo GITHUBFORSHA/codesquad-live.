@@ -2,272 +2,258 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>CodeSquad | Stealth Telemetry Studio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BugBusters | Squad Co-Op Arcade</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
   <style>
-    @keyframes pulse-ring { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 0.3; } 100% { transform: scale(0.95); opacity: 0.8; } }
-    .pulse-glow { animation: pulse-ring 2s infinite ease-in-out; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    @keyframes bounce-gentle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    .bounce-active { animation: bounce-gentle 1.8s infinite ease-in-out; }
   </style>
 </head>
-<body class="bg-[#0b0f17] text-slate-100 min-h-screen flex flex-col font-mono text-sm antialiased select-none">
+<body class="bg-gradient-to-br from-indigo-950 via-slate-900 to-purple-950 text-slate-100 min-h-screen flex flex-col antialiased">
 
-  <!-- Top Navbar -->
-  <header class="h-14 border-b border-slate-800 bg-[#0e1422] px-6 flex items-center justify-between">
-    <div class="flex items-center space-x-4">
-      <div class="flex items-center space-x-2">
-        <span class="w-3 h-3 rounded-full bg-emerald-500 pulse-glow"></span>
-        <span class="font-bold tracking-wider text-slate-100">CODESQUAD</span>
-        <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400">Pod: DevTeam-Alpha</span>
+  <!-- Friendly Top Bar -->
+  <header class="h-16 px-6 bg-slate-900/80 backdrop-blur-md border-b border-white/10 flex items-center justify-between sticky top-0 z-20">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-400 to-pink-500 flex items-center justify-center text-xl shadow-lg shadow-pink-500/20">
+        🍕
       </div>
-      <div class="h-4 w-px bg-slate-800"></div>
-      <div class="flex items-center space-x-2 text-xs">
-        <span class="text-slate-400">Streak:</span>
-        <span class="font-bold text-amber-400">🔥 7 Days</span>
-      </div>
-      <div class="flex items-center space-x-2 text-xs">
-        <span class="text-slate-400">Squad Flow:</span>
-        <span id="multiplier" class="font-bold text-cyan-400">1.0x XP</span>
+      <div>
+        <div class="text-sm font-extrabold tracking-wide flex items-center space-x-2">
+          <span>BUGBUSTERS CO-OP</span>
+          <span class="text-[10px] bg-pink-500/20 text-pink-300 font-bold px-2 py-0.5 rounded-full border border-pink-500/30">Squad Mode</span>
+        </div>
+        <div class="text-[11px] text-slate-400">Mission #01: Rescue the Pizza Cart!</div>
       </div>
     </div>
-    <div class="flex items-center space-x-3 text-xs">
-      <button onclick="toggleTelemetryModal()" class="px-3 py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300">
-        Inspect Telemetry Stream
-      </button>
+
+    <!-- Squad Status Badges -->
+    <div class="flex items-center space-x-4">
+      <div class="flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+        <span class="text-xs font-bold text-slate-300">You (Coder)</span>
+        <span class="text-slate-500">🤝</span>
+        <span class="text-xs font-bold text-amber-300">Alex (Detective)</span>
+      </div>
+
+      <div class="flex items-center space-x-1.5 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-full text-xs font-extrabold text-amber-300">
+        <span>🔥 Streak:</span>
+        <span>4 Days</span>
+      </div>
+
+      <div class="flex items-center space-x-1.5 bg-indigo-500/20 border border-indigo-500/40 px-3 py-1.5 rounded-full text-xs font-extrabold text-indigo-300">
+        <span>⚡ XP:</span>
+        <span id="xpScore">420</span>
+      </div>
     </div>
   </header>
 
-  <!-- Main Grid -->
-  <main class="flex-1 grid grid-cols-12 overflow-hidden">
+  <!-- Game Arena -->
+  <main class="flex-1 max-w-5xl w-full mx-auto p-6 grid grid-cols-12 gap-6 items-start">
     
-    <!-- Code Editor Section (Left 7 Cols) -->
-    <section class="col-span-7 flex flex-col border-r border-slate-800">
-      <div class="h-9 bg-[#0b101d] px-4 flex items-center justify-between border-b border-slate-800 text-xs text-slate-400">
-        <div class="flex items-center space-x-2">
-          <span>server.js</span>
-          <span class="text-[10px] text-emerald-400">● Live Sync</span>
+    <!-- Left Column: The Problem & Live Simulation (7 Cols) -->
+    <section class="col-span-12 lg:col-span-7 space-y-4">
+      
+      <!-- Scenario Card -->
+      <div class="bg-slate-800/60 border border-white/10 rounded-3xl p-5 shadow-xl backdrop-blur-sm">
+        <div class="flex items-start justify-between">
+          <div>
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-pink-400">Critical Squad Mission</span>
+            <h2 class="text-xl font-extrabold text-white mt-1">The Customers Can't Order Pizza! 😱</h2>
+            <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+              When users click <span class="font-bold text-amber-300">"Buy Now"</span>, the app crashes because the price calculation is missing a vital logic block.
+            </p>
+          </div>
+          <div class="text-3xl bounce-active">🛵</div>
         </div>
-        <div class="flex items-center space-x-3">
-          <span class="flex items-center space-x-1">
-            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-            <span>You</span>
-          </span>
-          <span class="flex items-center space-x-1">
-            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-            <span>Alex (Peer)</span>
-          </span>
-        </div>
-      </div>
 
-      <!-- Live Code Area -->
-      <div class="flex-1 p-4 bg-[#080c14] overflow-y-auto">
-        <pre id="codeDisplay" class="text-xs leading-relaxed text-slate-300 font-mono">
-const express = require('express');
-const app = express();
-const db = require('./db');
-
-app.get('/users/search', async (req, res) => {
-  const query = req.query.q;
-  
-  // Dynamic SQL Query (Needs Parameterization)
-  const results = await db.query("SELECT * FROM users WHERE username = '" + query + "'");
-  
-  return res.json({ status: 'ok', data: results });
-});
-
-app.listen(3000);</pre>
-      </div>
-
-      <!-- Real-Time Stealth Telemetry Input -->
-      <div class="p-3 bg-[#0d1322] border-t border-slate-800 flex flex-col space-y-2">
-        <div class="flex items-center justify-between text-[11px] text-slate-400">
-          <span>LIVE INPUT (TELEMETRY TRACKS KEYSTROKES & PAUSES AUTOMATICALLY):</span>
-          <div class="flex space-x-4">
-            <span>Typing Speed: <b id="wpmDisplay" class="text-cyan-400">0 WPM</b></span>
-            <span>Hesitation Index: <b id="pauseDisplay" class="text-amber-400">Low</b></span>
+        <!-- Mini App Mockup -->
+        <div class="mt-4 bg-slate-900/90 rounded-2xl p-4 border border-slate-700/60 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="text-2xl">🧀</div>
+            <div>
+              <div class="text-xs font-bold text-slate-200">Extra Cheesy Pepperoni</div>
+              <div class="text-[11px] text-slate-400">Quantity: 2 | Base: $12.00</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs text-slate-400">Total:</div>
+            <div id="priceDisplay" class="text-base font-extrabold text-red-400">NaN (CRASHED!)</div>
           </div>
         </div>
-        <input 
-          id="keystrokeInput" 
-          type="text" 
-          placeholder="Type code or debug command here (e.g. const sanitized = req.query.q)..."
-          class="w-full bg-[#080c14] border border-slate-700 rounded px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
-          oninput="handleKeystroke(event)"
-        />
-        <div class="flex space-x-2 pt-1">
-          <button onclick="runCode()" class="px-4 py-1.5 rounded bg-cyan-600 hover:bg-cyan-500 text-xs font-semibold text-white">
-            Run & Test
+
+        <!-- Peer Clue Box (Alex's Voice) -->
+        <div class="mt-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3.5 flex items-start space-x-3">
+          <div class="text-2xl">🕵️‍♂️</div>
+          <div>
+            <div class="text-xs font-bold text-amber-300">Alex's Live Clue:</div>
+            <div class="text-xs text-amber-200/90 mt-0.5 leading-snug">
+              "Hey! The calculator is multiplying price by quantity, but someone forgot to turn the user input from a raw text word into an actual number!"
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- The Puzzle Board -->
+      <div class="bg-slate-800/60 border border-white/10 rounded-3xl p-5 shadow-xl">
+        <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
+          <span>Snap the right repair block into place:</span>
+          <span class="text-[10px] text-indigo-400 font-bold">1-Click Fix</span>
+        </div>
+
+        <!-- The Broken Logic Line -->
+        <div class="bg-[#0b0f19] rounded-2xl p-4 border border-slate-700 mono text-xs text-slate-300 space-y-2">
+          <div class="text-slate-500">// Calculating total order cost:</div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-purple-400">const</span> total = price * 
+            <span id="dropSlot" class="px-3 py-1.5 rounded-xl border-2 border-dashed border-pink-500/60 bg-pink-500/10 text-pink-300 font-bold">
+              [ Tap a block below ]
+            </span>
+            ;
+          </div>
+        </div>
+
+        <!-- Interactive Puzzle Pieces -->
+        <div class="mt-4 grid grid-cols-3 gap-3">
+          <button onclick="pickBlock(1, this)" class="block-btn p-3 bg-slate-700/60 hover:bg-slate-700 border border-white/10 hover:border-indigo-400 rounded-2xl text-left transition-all active:scale-95 group">
+            <div class="text-[10px] font-bold text-slate-400 group-hover:text-indigo-300">Option A</div>
+            <div class="mono text-xs font-bold text-pink-300 mt-1">String(qty)</div>
+            <div class="text-[10px] text-slate-400 mt-1">Treats it as letters</div>
           </button>
-          <button onclick="simulatePeerFix()" class="px-4 py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white">
-            Simulate Peer Resolving Issue
+
+          <button onclick="pickBlock(2, this)" class="block-btn p-3 bg-slate-700/60 hover:bg-slate-700 border border-white/10 hover:border-emerald-400 rounded-2xl text-left transition-all active:scale-95 group">
+            <div class="text-[10px] font-bold text-slate-400 group-hover:text-emerald-300">Option B</div>
+            <div class="mono text-xs font-bold text-emerald-300 mt-1">Number(qty)</div>
+            <div class="text-[10px] text-slate-400 mt-1">Converts to real digit</div>
+          </button>
+
+          <button onclick="pickBlock(3, this)" class="block-btn p-3 bg-slate-700/60 hover:bg-slate-700 border border-white/10 hover:border-pink-400 rounded-2xl text-left transition-all active:scale-95 group">
+            <div class="text-[10px] font-bold text-slate-400 group-hover:text-pink-300">Option C</div>
+            <div class="mono text-xs font-bold text-purple-300 mt-1">qty.length</div>
+            <div class="text-[10px] text-slate-400 mt-1">Counts character count</div>
           </button>
         </div>
       </div>
     </section>
 
-    <!-- Side Panel: Bounties & Competency Radar (Right 5 Cols) -->
-    <section class="col-span-5 flex flex-col bg-[#0b0f17]">
-      <!-- Terminal Output -->
-      <div class="h-44 border-b border-slate-800 p-3 bg-[#06090f] flex flex-col font-mono text-[11px]">
-        <div class="text-slate-500 mb-1 border-b border-slate-800 pb-1">TERMINAL LOGS:</div>
-        <div id="terminalLogs" class="flex-1 overflow-y-auto space-y-1 text-slate-300">
-          <div class="text-slate-500">> Waiting for execution...</div>
-        </div>
-      </div>
-
-      <!-- Active Dynamic AI Bounties -->
-      <div class="p-4 border-b border-slate-800 flex-1 flex flex-col">
+    <!-- Right Column: Squad Feed & Dopamine Milestones (5 Cols) -->
+    <section class="col-span-12 lg:col-span-5 space-y-4">
+      
+      <!-- Squad Victory & Progression Box -->
+      <div class="bg-gradient-to-b from-indigo-900/40 to-slate-800/60 border border-indigo-500/30 rounded-3xl p-5 shadow-xl">
         <div class="flex items-center justify-between mb-3">
-          <span class="text-xs font-bold text-slate-200 tracking-wide">ACTIVE SQUAD BOUNTIES</span>
-          <span class="text-[10px] bg-cyan-950 text-cyan-400 px-2 py-0.5 rounded border border-cyan-800">Dynamic AI Injected</span>
+          <span class="text-xs font-extrabold text-indigo-300 uppercase tracking-wider">Squad Superpowers</span>
+          <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full font-bold">Level 2</span>
         </div>
-        
-        <div id="bountyCard" class="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 mb-3 flex flex-col space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold text-amber-400">⚡ Prevent SQL Injection Vulnerability</span>
-            <span class="text-[10px] text-amber-300 font-bold">+50 XP</span>
+
+        <!-- Power Progress Bar -->
+        <div class="space-y-1.5 mb-4">
+          <div class="flex justify-between text-[11px] font-bold">
+            <span class="text-slate-300">Logic & Type Mastery</span>
+            <span id="masteryPercent" class="text-pink-400">35%</span>
           </div>
-          <p class="text-[11px] text-slate-400 leading-snug">
-            Unsanitized parameter detected on line 10. Refactor using parameterized bindings to secure query flow.
-          </p>
-          <div class="flex items-center justify-between pt-1 text-[10px] text-slate-500">
-            <span>Difficulty: Intermediate</span>
-            <span>Target: Architecture & Security</span>
+          <div class="h-3 w-full bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-700">
+            <div id="masteryBar" class="h-full bg-gradient-to-r from-pink-500 to-indigo-500 rounded-full transition-all duration-700" style="width: 35%"></div>
           </div>
         </div>
 
-        <!-- Competency Radar -->
-        <div class="mt-auto">
-          <div class="text-xs font-bold text-slate-200 mb-2">LIVE COMPETENCY RADAR</div>
-          <div class="bg-[#0e1422] p-3 rounded border border-slate-800 flex items-center justify-between">
-            <div class="space-y-1.5 text-[11px]">
-              <div>Query Tuning: <span id="radar-query" class="text-cyan-400 font-bold">45%</span></div>
-              <div>System Design: <span id="radar-arch" class="text-indigo-400 font-bold">52%</span></div>
-              <div>Debugging Speed: <span id="radar-debug" class="text-emerald-400 font-bold">60%</span></div>
-              <div>Peer Mentoring: <span id="radar-mentor" class="text-amber-400 font-bold">35%</span></div>
-            </div>
-            <div class="text-center">
-              <div id="overallScore" class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">
-                48
-              </div>
-              <div class="text-[10px] text-slate-500">Skill Score</div>
-            </div>
+        <!-- Badges Unlocked -->
+        <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
+          <div class="bg-slate-900/60 p-2.5 rounded-2xl border border-white/5">
+            <div class="text-xl mb-1">🍕</div>
+            <div class="font-bold text-slate-200">Pizza Savior</div>
+            <div class="text-slate-500">In Progress</div>
+          </div>
+          <div class="bg-slate-900/60 p-2.5 rounded-2xl border border-white/5">
+            <div class="text-xl mb-1">🤝</div>
+            <div class="font-bold text-slate-200">Dynamic Duo</div>
+            <div class="text-emerald-400 font-bold">Unlocked!</div>
+          </div>
+          <div class="bg-slate-900/60 p-2.5 rounded-2xl border border-white/5 opacity-40">
+            <div class="text-xl mb-1">⚡</div>
+            <div class="font-bold text-slate-200">Speed Demon</div>
+            <div class="text-slate-500">Locked</div>
           </div>
         </div>
       </div>
+
+      <!-- Live Squad Chat & Reaction Feed -->
+      <div class="bg-slate-800/60 border border-white/10 rounded-3xl p-5 shadow-xl flex flex-col h-[280px]">
+        <div class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-2">Live Squad Chat</div>
+        <div id="chatFeed" class="flex-1 overflow-y-auto space-y-2 text-xs pr-1">
+          <div class="bg-amber-500/10 text-amber-200 p-2.5 rounded-2xl rounded-tl-none border border-amber-500/20 max-w-[85%]">
+            <span class="font-bold block text-[10px] text-amber-300">Alex</span>
+            "I checked the console, it said NaN. Tap the block that turns it into a real number!"
+          </div>
+        </div>
+
+        <!-- Quick Reaction Bar -->
+        <div class="pt-3 border-t border-slate-700/60 flex items-center space-x-2">
+          <button onclick="sendSquadReaction('🔥')" class="hover:scale-125 transition-transform text-lg bg-slate-900 p-2 rounded-xl border border-slate-700">🔥</button>
+          <button onclick="sendSquadReaction('👏')" class="hover:scale-125 transition-transform text-lg bg-slate-900 p-2 rounded-xl border border-slate-700">👏</button>
+          <button onclick="sendSquadReaction('🚀')" class="hover:scale-125 transition-transform text-lg bg-slate-900 p-2 rounded-xl border border-slate-700">🚀</button>
+          <button onclick="sendSquadReaction('💡')" class="hover:scale-125 transition-transform text-lg bg-slate-900 p-2 rounded-xl border border-slate-700">💡</button>
+        </div>
+      </div>
+
     </section>
   </main>
 
-  <!-- Invisible Telemetry Drawer Modal -->
-  <div id="telemetryModal" class="fixed inset-0 bg-black/70 flex items-center justify-center hidden z-50">
-    <div class="w-[500px] bg-[#0e1422] border border-slate-700 rounded-lg p-5 flex flex-col space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-        <h3 class="text-sm font-bold text-slate-100">Invisible Telemetry Stream</h3>
-        <button onclick="toggleTelemetryModal()" class="text-xs text-slate-400 hover:text-white">✕</button>
-      </div>
-      <div class="text-xs text-slate-400 space-y-2">
-        <p>This data is logged continuously without intrusive test popups:</p>
-        <ul id="telemetryList" class="space-y-1 bg-[#06090f] p-3 rounded border border-slate-800 text-[11px] font-mono">
-          <li>- Initializing keystroke baseline tracker...</li>
-          <li>- Monitoring cursor dwell & refactoring rhythm...</li>
-        </ul>
-      </div>
-      <button onclick="toggleTelemetryModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs rounded text-slate-200">
-        Close Telemetry View
-      </button>
-    </div>
-  </div>
-
   <script>
-    let keystrokes = 0;
-    let lastKeyTime = Date.now();
-    let pauses = 0;
-    let telemetryEvents = [];
+    let solved = false;
 
-    function handleKeystroke(e) {
-      keystrokes++;
-      const now = Date.now();
-      const diff = now - lastKeyTime;
-      
-      if (diff > 1200) {
-        pauses++;
-        document.getElementById('pauseDisplay').innerText = 'Elevated (' + pauses + ' pauses)';
-        logTelemetry('Hesitation detected: ' + diff + 'ms idle before next keystroke');
+    function pickBlock(option, el) {
+      if (solved) return;
+      const slot = document.getElementById('dropSlot');
+
+      if (option === 2) {
+        // Correct Fix!
+        solved = true;
+        slot.className = 'px-3 py-1.5 rounded-xl border-2 border-emerald-400 bg-emerald-500/20 text-emerald-300 font-bold';
+        slot.innerText = 'Number(qty)';
+
+        // Fix Pizza App
+        document.getElementById('priceDisplay').className = 'text-base font-extrabold text-emerald-400';
+        document.getElementById('priceDisplay').innerText = '$24.00 (FIXED! 🎉)';
+
+        // Boost Dopamine
+        confetti({ particleCount: 70, spread: 60, origin: { y: 0.7 } });
+        document.getElementById('xpScore').innerText = '520 (+100 XP)';
+        document.getElementById('masteryPercent').innerText = '75%';
+        document.getElementById('masteryBar').style.width = '75%';
+
+        // Alex Responds
+        setTimeout(() => {
+          appendChat('Alex', 'YOOOO we fixed it! Orders are going through now! 🍕💨', 'bg-amber-500/10 text-amber-200 border-amber-500/20');
+        }, 600);
+
       } else {
-        document.getElementById('pauseDisplay').innerText = 'Low (Fluid)';
-      }
-      
-      lastKeyTime = now;
-      const wpm = Math.min(120, Math.floor(keystrokes * 2.5));
-      document.getElementById('wpmDisplay').innerText = wpm + ' WPM';
-    }
-
-    function logTelemetry(msg) {
-      telemetryEvents.push(new Date().toLocaleTimeString() + ' | ' + msg);
-      const list = document.getElementById('telemetryList');
-      if (list) {
-        const item = document.createElement('li');
-        item.innerText = '- ' + msg;
-        list.appendChild(item);
+        // Wrong Block
+        slot.className = 'px-3 py-1.5 rounded-xl border-2 border-rose-500 bg-rose-500/20 text-rose-300 font-bold';
+        slot.innerText = option === 1 ? 'String(qty) ❌' : 'qty.length ❌';
+        
+        setTimeout(() => {
+          appendChat('Alex', 'Hmm, total is still broken. Look for the one that says Number! 👀', 'bg-slate-700 text-slate-300 border-slate-600');
+        }, 400);
       }
     }
 
-    function runCode() {
-      const logs = document.getElementById('terminalLogs');
-      logs.innerHTML = `
-        <div class="text-emerald-400">> Server listening on port 3000...</div>
-        <div class="text-amber-400">> WARNING: Unsafe string concatenation in SQL query detected at line 10.</div>
-        <div class="text-red-400">> Test failed: Mock injection test exposed internal table schema.</div>
-      `;
-      logTelemetry('Test executed. Failure pattern: SQL String Concatenation.');
+    function sendSquadReaction(emoji) {
+      appendChat('You', emoji + ' High five!', 'bg-indigo-600/30 text-indigo-200 border-indigo-500/30 self-end ml-auto');
+      confetti({ particleCount: 20, spread: 40, origin: { y: 0.9 } });
     }
 
-    function simulatePeerFix() {
-      // 1. Refactor Code
-      document.getElementById('codeDisplay').innerHTML = `
-const express = require('express');
-const app = express();
-const db = require('./db');
-
-app.get('/users/search', async (req, res) => {
-  const query = req.query.q;
-  
-  // Safe Parameterized Query (Peer Refactor)
-  const results = await db.query("SELECT * FROM users WHERE username = $1", [query]);
-  
-  return res.json({ status: 'ok', data: results });
-});
-
-app.listen(3000);`;
-
-      // 2. Clear Bounty & Flash Success
-      const bounty = document.getElementById('bountyCard');
-      bounty.className = 'p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 mb-3 flex flex-col space-y-1';
-      bounty.innerHTML = `
-        <div class="text-xs font-bold text-emerald-400">✓ Bounty Cleared! +50 XP</div>
-        <div class="text-[11px] text-slate-300">Alex applied parameterized bindings. Vulnerability resolved.</div>
-      `;
-
-      // 3. Dopamine Multipliers
-      document.getElementById('multiplier').innerText = '2.4x XP (Flow State)';
-      document.getElementById('radar-query').innerText = '75%';
-      document.getElementById('radar-arch').innerText = '68%';
-      document.getElementById('overallScore').innerText = '62';
-
-      // 4. Update Terminal
-      const logs = document.getElementById('terminalLogs');
-      logs.innerHTML = `
-        <div class="text-emerald-400">> Hot-reload applied by Alex.</div>
-        <div class="text-emerald-400">> Re-running automated vulnerability checks...</div>
-        <div class="text-emerald-400">> All checks passed. Zero injection risks found.</div>
-      `;
-
-      logTelemetry('Peer interaction confirmed: Peer Alex committed parameterized fix.');
-      logTelemetry('Competency updated: Query Tuning boosted 45% -> 75%.');
-    }
-
-    function toggleTelemetryModal() {
-      const modal = document.getElementById('telemetryModal');
-      modal.classList.toggle('hidden');
+    function appendChat(user, msg, colorClasses) {
+      const chat = document.getElementById('chatFeed');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `p-2.5 rounded-2xl border text-xs ${colorClasses} max-w-[85%]`;
+      msgDiv.innerHTML = `<span class="font-bold block text-[10px] opacity-75">${user}</span>${msg}`;
+      chat.appendChild(msgDiv);
+      chat.scrollTop = chat.scrollHeight;
     }
   </script>
 </body>
